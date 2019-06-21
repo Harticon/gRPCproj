@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package user;
+
+import "google/protobuf/empty.proto";
+
+//GENERATING proto.pb.go
+
+//protoc -I user -I $GOPATH/src/github.com/google/protobuf/src  user/proto/proto.proto --go_out=plugins=grpc:user
+
+
+service RouteGuide {
+    // signIn
+    // signUp
+
+    rpc SignUp(User) returns (google.protobuf.Empty) {}
+    rpc SignIn(User) returns (Token) {}
+}
+
+message User {
+    string email = 1;
+    string password = 2;
+}
+
+message Token {
+    string token = 1;
+}
+
