@@ -64,7 +64,7 @@ func (s *RouteGuideServer) SignIn(ctx context.Context, usr *user.User) (*user.To
 	query, err := s.access.GetUser(usr.Email, usr.Password)
 	if err != nil {
 		fmt.Println("error: couldnt find user", err)
-		return &user.Token{}, err
+		return &user.Token{}, status.Error(http.StatusBadRequest, err.Error())
 	}
 
 	fmt.Printf("user logged in %s with valid token\n", query.Email)
