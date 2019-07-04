@@ -4,19 +4,29 @@ package user;
 
 //import "google/protobuf/empty.proto";
 
-
+import "google/api/annotations.proto";
 
 //GENERATING proto.pb.go
 
-//protoc -I user -I $GOPATH/src/github.com/google/protobuf/src  user/proto/proto.proto --go_out=plugins=grpc:user
+//protoc -I user -I $GOPATH/src/github.com/google/protobuf/src -I $GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis user/proto/proto.proto   --grpc-gateway_out=logtostderr=true:user --go_out=plugins=grpc:user
 
 
 service RouteGuide {
     // signIn
     // signUp
+    rpc SignUp (User) returns (User) {
+        option (google.api.http) = {
+        post: "/signup"
+        body: "*"
+    };
 
-    rpc SignUp(User) returns (User) {}
-    rpc SignIn(User) returns (Token) {}
+    }
+    rpc SignIn (User) returns (Token) {
+        option (google.api.http) = {
+        post: "/signin"
+        body: "*"
+    };
+    }
 }
 
 message User {
