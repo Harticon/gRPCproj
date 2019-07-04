@@ -2,7 +2,9 @@ syntax = "proto3";
 
 package user;
 
-import "google/protobuf/empty.proto";
+//import "google/protobuf/empty.proto";
+
+
 
 //GENERATING proto.pb.go
 
@@ -13,7 +15,7 @@ service RouteGuide {
     // signIn
     // signUp
 
-    rpc SignUp(User) returns (google.protobuf.Empty) {}
+    rpc SignUp(User) returns (User) {}
     rpc SignIn(User) returns (Token) {}
 }
 
