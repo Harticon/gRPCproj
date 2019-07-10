@@ -18,13 +18,6 @@ import (
 	"time"
 )
 
-var (
-	// command-line options:
-	// gRPC server endpoint
-	grpcServerEndpoint1 = flag.String("/signup", "localhost:9090", "gRPC server endpoint")
-	grpcServerEndpoint2 = flag.String("/signin", "localhost:9090", "gRPC server endpoint")
-)
-
 func runHttpReverse() error {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
@@ -34,11 +27,7 @@ func runHttpReverse() error {
 
 	opts := []grpc.DialOption{grpc.WithInsecure()}
 
-	err := user.RegisterRouteGuideHandlerFromEndpoint(ctx, mux, *grpcServerEndpoint1, opts)
-	if err != nil {
-		return err
-	}
-	err = user.RegisterRouteGuideHandlerFromEndpoint(ctx, mux, *grpcServerEndpoint2, opts)
+	err := user.RegisterRouteGuideHandlerFromEndpoint(ctx, mux, ":9090", opts)
 	if err != nil {
 		return err
 	}
@@ -62,11 +51,12 @@ func runGrpcServer() error {
 
 	db, err := gorm.Open("sqlite3", viper.GetString("connection"))
 	if err != nil {
-		panic("failed to connect to database	")
+		panic("failed to connect to database: " + err.Error())
 	}
 
 	db.AutoMigrate(&user.User{})
 
+	//access := order.NewAccess(&gorm.DB{})
 	access := order.NewAccess(db)
 	service := order.NewRouteGuideServer(access)
 
@@ -86,7 +76,14 @@ func main() {
 	//todo ??? maybe error handling
 	go runGrpcServer()
 
-	time.Sleep(2 * time.Second)
+	fmt.Println("before sleep")
+
+	//for i := 0; i < 10; i++ {
+	//	fmt.Println((i + 1) * 5)
+	//	time.Sleep(5 * time.Second)
+	//}
+
+	time.Sleep(5 * time.Second)
 
 	defer glog.Flush()
 	if err := runHttpReverse(); err != nil {
