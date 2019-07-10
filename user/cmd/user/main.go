@@ -9,7 +9,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"log"
@@ -22,7 +22,6 @@ func runHttpReverse() error {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-
 	mux := runtime.NewServeMux()
 
 	opts := []grpc.DialOption{grpc.WithInsecure()}
@@ -33,7 +32,7 @@ func runHttpReverse() error {
 	}
 
 	fmt.Println("Reverse proxy is running")
-	return http.ListenAndServe(":8080", mux)
+	return http.ListenAndServe(":80", mux)
 
 }
 
@@ -45,11 +44,11 @@ func runGrpcServer() error {
 	}
 	grpcServer := grpc.NewServer()
 
-	viper.SetDefault("connection", "grpc.db")
+	viper.SetDefault("connection", "host=db-svc user=goo dbname=goo sslmode=disable password=goo port=5432")
 	viper.SetDefault("secret", "secret")
 	viper.SetDefault("hashSecret", "salt&peper")
 
-	db, err := gorm.Open("sqlite3", viper.GetString("connection"))
+	db, err := gorm.Open("postgres", viper.GetString("connection"))
 	if err != nil {
 		panic("failed to connect to database: " + err.Error())
 	}
