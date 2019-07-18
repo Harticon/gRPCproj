@@ -15,6 +15,9 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -32,7 +35,7 @@ func runHttpReverse() error {
 	}
 
 	fmt.Println("Reverse proxy is running")
-	return http.ListenAndServe(":80", mux)
+	return http.ListenAndServe(":8080", mux)
 
 }
 
@@ -48,21 +51,22 @@ func runGrpcServer() error {
 	viper.SetDefault("secret", "secret")
 	viper.SetDefault("hashSecret", "salt&peper")
 
-	db, err := gorm.Open("postgres", viper.GetString("connection"))
-	if err != nil {
-		panic("failed to connect to database: " + err.Error())
-	}
+	//db, err := gorm.Open("postgres", viper.GetString("connection"))
+	//if err != nil {
+	//	panic("failed to connect to database: " + err.Error())
+	//}
+	//
+	//db.AutoMigrate(&user.User{})
 
-	db.AutoMigrate(&user.User{})
-
-	//access := order.NewAccess(&gorm.DB{})
-	access := order.NewAccess(db)
+	access := order.NewAccess(&gorm.DB{})
+	//access := order.NewAccess(db)
 	service := order.NewRouteGuideServer(access)
 
 	user.RegisterRouteGuideServer(grpcServer, service)
 	fmt.Println("server is running")
 	err = grpcServer.Serve(lis)
 	if err != nil {
+		fmt.Println("Tusom")
 		return err
 	}
 	return nil
@@ -70,8 +74,22 @@ func runGrpcServer() error {
 
 func main() {
 
-	flag.Parse()
+	gracefulStop := make(chan os.Signal)
+	signal.Notify(gracefulStop, syscall.SIGTERM)
+	signal.Notify(gracefulStop, syscall.SIGINT)
+	signal.Notify(gracefulStop, syscall.SIGKILL)
 
+	go func() {
+		sig := <-gracefulStop
+		fmt.Printf("caught sig: %+v", sig)
+		fmt.Println("Stopping GRPC server")
+		time.Sleep(2 * time.Second)
+		fmt.Println("Stopping HTTP server")
+		time.Sleep(2 * time.Second)
+		os.Exit(0)
+	}()
+
+	flag.Parse()
 	//todo ??? maybe error handling
 	go runGrpcServer()
 
